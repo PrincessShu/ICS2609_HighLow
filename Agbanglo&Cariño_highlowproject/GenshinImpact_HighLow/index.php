@@ -1,90 +1,82 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High or Low Game</title>
+    <title>Genshin Impact In Between</title>
 </head>
 <body>
-    <h1>High or Low Game</h1>
-    <p>Guess whether the next number will be high or low.</p>
-    <p>Current Score: <span id="score"><?php echo isset($_SESSION['score']) ? $_SESSION['score'] : 0; ?></span></p>
-    <p>Rounds left: <span id="rounds"><?php echo isset($_SESSION['rounds']) ? $_SESSION['rounds'] : 10; ?></span></p>
-    <?php if (isset($_SESSION['number_range'])): ?>
-        <p><?php echo $_SESSION['number_range']; ?></p>
-    <?php endif; ?>
+<?php
 
-    <?php
-    session_start();
+function play_game() {
+    // Initialize player's lives to 3
+    $lives = 3;
 
-    if (!isset($_SESSION['score']) || isset($_POST['reset'])) {
-        $_SESSION['score'] = 0;
-        $_SESSION['rounds'] = 10;
-        generateRandomNumbers();
-    }
+    echo "Welcome to the Deal or No Deal Number Game!\n";
 
-    function generateRandomNumbers() {
-        $randomNumber1 = mt_rand(1, 15);
-        $randomNumber2 = mt_rand(1, 15);
-        echo "<p>Random numbers for this round: $randomNumber1, $randomNumber2</p>";
-        $_SESSION['random_number1'] = $randomNumber1;
-        $_SESSION['random_number2'] = $randomNumber2;
-    }
+    while ($lives > 0) {
+        // Generate two random numbers between 2 and 12
+        $num1 = rand(2, 12);
+        $num2 = rand(2, 12);
 
-    function playRound($guess) {
-        $randomNumber1 = $_SESSION['random_number1'];
-        $randomNumber2 = $_SESSION['random_number2'];
+        echo "\nYour numbers are: $num1 and $num2\n";
 
-        echo "<p>Your guess: $guess</p>";
+        // Ask the player for their decision (deal or no deal)
+        echo "Deal or No Deal? (deal/no deal): ";
+        $decision = strtolower(trim(fgets(STDIN)));
 
-        if ($randomNumber1 === $randomNumber2) {
-            echo "<script>alert('Both numbers are equal. Choose whether you think the next number will be high or low.');</script>";
-            return;
+        // If player chooses deal
+        if ($decision == 'deal') {
+            // If the numbers are equal, the player wins
+            if ($num1 == $num2) {
+                echo "Congratulations! You won!\n";
+            } else {
+                // Generate the third number with 50% chance of being equal to num1 or num2
+                $num3 = rand(2, 12);
+                echo "The third number is concealed.\n";
+                echo "Your numbers are: $num1, $num2, and ?\n";
+
+                // Ask the player to choose high or low
+                echo "Choose high or low: ";
+                $choice = strtolower(trim(fgets(STDIN)));
+
+                // Generate a random number between 2 and 12
+                $revealed_num = rand(2, 12);
+                echo "The revealed number is: $revealed_num\n";
+
+                // Determine if the player wins or loses based on their choice and the revealed number
+                if (($choice == 'high' && $revealed_num > 6) || ($choice == 'low' && $revealed_num <= 6)) {
+                    echo "Congratulations! You won!\n";
+                } else {
+                    echo "Sorry, you lost.\n";
+                    $lives--;
+                    echo "You have $lives lives left.\n";
+                }
+            }
         }
-
-        $minNumber = min($randomNumber1, $randomNumber2);
-        $maxNumber = max($randomNumber1, $randomNumber2);
-
-        $minNumber = max(1, $minNumber);
-        $maxNumber = min(15, $maxNumber);
-
-        $_SESSION['number_range'] = "Choose the numbers between: $minNumber to $maxNumber";
-
-        if ($randomNumber2 > $randomNumber1) {
-            $result = 'high';
-        } elseif ($randomNumber2 < $randomNumber1) {
-            $result = 'low';
-        } else {
-            $result = 'equal';
+        // If player chooses no deal
+        elseif ($decision == 'no deal') {
+            // Player loses 1 life point
+            $lives--;
+            echo "You chose not to deal. You lost 1 life point.\n";
+            echo "You have $lives lives left.\n";
         }
-
-        if ($guess === $result) {
-            $_SESSION['score']++;
-            echo "<script>alert('Congratulations! You guessed right.');</script>";
-        } else {
-            $_SESSION['score']--;
-            echo "<script>alert('Oops! You guessed wrong. The correct answer is $result and the number is $randomNumber2.');</script>";
-        }
-
-        $_SESSION['rounds']--;
-
-        echo "<script>document.getElementById('score').textContent = {$_SESSION['score']};</script>";
-        echo "<script>document.getElementById('rounds').textContent = {$_SESSION['rounds']};</script>";
-
-        if ($_SESSION['rounds'] === 0) {
-            echo "<script>alert('Game over! Your final score is {$_SESSION['score']}.');</script>";
-            session_destroy();
+        // If input is invalid
+        else {
+            echo "Invalid input. Please enter 'deal' or 'no deal'.\n";
         }
     }
 
-    if (isset($_POST['guess'])) {
-        playRound($_POST['guess']);
+    // If player runs out of lives, end the game
+    if ($lives == 0) {
+        echo "Sorry, you've run out of lives. Game over.\n";
     }
-    ?>
-    <form method="post">
-        <button type="submit" name="guess" value="low">Low</button>
-        <button type="submit" name="guess" value="high">High</button>
-        <button type="submit" name="reset">Reset Game</button>
-    </form>
+}
+
+// Call the function to start the game
+play_game();
+
+?>
+
 </body>
 </html>
